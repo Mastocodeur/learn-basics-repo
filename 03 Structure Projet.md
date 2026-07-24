@@ -200,6 +200,7 @@ Thumbs.db
 - Ne jamais versionner de données brutes volumineuses (utiliser DVC, Git LFS ou un stockage cloud)
 - Ne jamais versionner le fichier `.env` (contient des secrets : clés API, mots de passe)
 - Toujours versionner le `.env.example` comme template
+- Configurer les settings de votre IDE (VS Code, Cursor ou autre) en renseignant les fichiers comme "__pycache__" dans les **Exclude files** pour éviter de surcharger votre explorateur. Attention : cela ne vous libère pas du fichier **.gitignore**.
 
 ---
 

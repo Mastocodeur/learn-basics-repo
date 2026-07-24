@@ -38,10 +38,11 @@ Installer les extensions VS Code :
 * Python, 
 * Jupyter, 
 * Copilot,
-* PDF Viewer
-* PPTX Preview
-* Live Server
-* Excel Viewer
+* PDF Viewer,
+* PPTX Preview,
+* Live Server,
+* Excel Viewer,
+* Material Icon Theme
 * Tout autre extension qui vous semble utile...etc
 
 ## Installation de git
@@ -206,7 +207,8 @@ ___
 Installation de toute les autres applications qui peuvent être utiles : 
 
 * Notion : https://www.notion.com/fr/desktop
-* Postman : https://www.postman.com/downloads/
+* BitWarden (Pour partager vos mots de passe) : https://bitwarden.com/fr-fr/
+* Postman (Pour tester vos requêtes HTTP) : https://www.postman.com/downloads/
 * OBS Studio (vivement conseillé pour vos futures démonstrations) : https://obsproject.com/fr/download
 * Microsoft PowerToys (via Microsoft Store)
 * etc.
