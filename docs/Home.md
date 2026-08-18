@@ -4,7 +4,9 @@ Ce wiki rassemble les bonnes pratiques, outils et conventions recommandés pour 
 
 L'objectif est de centraliser en un seul endroit tout ce qu'il faut savoir pour démarrer rapidement et travailler de manière cohérente, que l'on soit seul ou en équipe.
 
-Ce wiki est **vivant** : il évolue avec les pratiques et les outils. Toute contribution est la bienvenue — voir [CONTRIBUTING.md](CONTRIBUTING.md).
+Ce wiki est **vivant** : il évolue avec les pratiques et les outils. 
+
+Toute contribution est la bienvenue — voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Bonne lecture à tous !
 ---
