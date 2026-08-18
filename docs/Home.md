@@ -6,6 +6,7 @@ L'objectif est de centraliser en un seul endroit tout ce qu'il faut savoir pour 
 
 Ce wiki est **vivant** : il évolue avec les pratiques et les outils. Toute contribution est la bienvenue — voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Bonne lecture à tous !
 ---
 
 ## Chapitres
