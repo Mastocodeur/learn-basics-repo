@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "docs/**.md"
+  workflow_dispatch:
 
 jobs:
   sync-wiki:
@@ -20,9 +21,7 @@ jobs:
 
       - name: Copier les fichiers Markdown vers le wiki
         run: |
-          find . -maxdepth 1 -name "*.md" \
-            ! -name "README.md" \
-            ! -name "CONTRIBUTING.md" \
+          find docs/ -maxdepth 1 -name "*.md" \
             -exec cp {} wiki/ \;
 
       - name: Commiter et pusher vers le wiki
