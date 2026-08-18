@@ -291,18 +291,62 @@ PROJECT_ID=mon-projet-gcp
 
 ### `Makefile`
 
-Fichier de commandes raccourcies pour automatiser les tâches répétitives du projet. Permet d'exécuter des séquences complexes en une seule commande.
+Le `Makefile` est un fichier de commandes raccourcies qui automatise les tâches répétitives du projet. Plutôt que de retaper des commandes longues ou de les chercher dans la documentation, `make <cible>` exécute la séquence associée en une frappe.
 
-**Contenu type :**
+#### Syntaxe de base
+
+Un Makefile est composé de **cibles** (*targets*). Chaque cible suit cette structure :
 
 ```makefile
-.PHONY: install test lint format lint-format interrogate pre-commit-update clean
+cible: dépendances
+	commande        # ← tabulation obligatoire (pas des espaces)
+	commande
+```
+
+La **tabulation** en début de ligne est obligatoire — les espaces provoquent une erreur. Les éditeurs modernes (VS Code, Cursor) insèrent automatiquement une tabulation dans les fichiers `.makefile`.
+
+La directive `.PHONY` indique à `make` que ces cibles ne correspondent pas à des fichiers — sans elle, `make` refuse d'exécuter une cible si un fichier du même nom existe déjà dans le dossier :
+
+```makefile
+.PHONY: install test lint format clean
+```
+
+#### Variables
+
+Les variables Makefile évitent de dupliquer les chemins ou commandes répétées :
+
+```makefile
+PYTHON = uv run python
+SRC    = src/
+TESTS  = tests/
+
+test:
+	uv run pytest $(TESTS)
+
+run:
+	$(PYTHON) $(SRC)mon_projet/main.py
+```
+
+#### Dépendances entre cibles
+
+Une cible peut dépendre d'une autre — `make ci` exécutera `lint` puis `test` automatiquement :
+
+```makefile
+ci: lint test
+	@echo "✅ CI passée"
+```
+
+#### Makefile type pour un projet Python
+
+```makefile
+.PHONY: install test lint format lint-format interrogate coverage pre-commit-update clean ci
+
+# ── Environnement ─────────────────────────────────────────────────────────────
 
 install:
 	uv sync
 
-test:
-	uv run pytest
+# ── Qualité du code ───────────────────────────────────────────────────────────
 
 lint:
 	uv run ruff check .
@@ -315,7 +359,22 @@ lint-format:
 	uv run ruff format .
 
 interrogate:
-	uv run interrogate .
+	uv run interrogate src/
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+
+test:
+	uv run pytest
+
+coverage:
+	uv run pytest --cov=src --cov-report=term-missing --cov-report=html
+	@echo "Rapport disponible dans htmlcov/index.html"
+
+# ── Pipeline complète (utilisée en CI) ───────────────────────────────────────
+
+ci: lint test
+
+# ── Maintenance ───────────────────────────────────────────────────────────────
 
 pre-commit-update:
 	uv run pre-commit autoupdate
@@ -323,6 +382,9 @@ pre-commit-update:
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type d -name .ipynb_checkpoints -exec rm -rf {} +
+	find . -type d -name .pytest_cache -exec rm -rf {} +
+	find . -type d -name htmlcov -exec rm -rf {} +
+	find . -name "*.pyc" -delete
 ```
 
 **Usage :**
@@ -330,13 +392,17 @@ clean:
 | Commande | Action |
 |----------|--------|
 | `make install` | Installe les dépendances du projet |
-| `make test` | Lance les tests avec pytest |
 | `make lint` | Vérifie le code avec Ruff |
 | `make format` | Formate le code avec Ruff |
 | `make lint-format` | Lint + format en une seule commande |
+| `make test` | Lance les tests avec pytest |
+| `make coverage` | Tests + rapport de couverture HTML |
+| `make ci` | Lint + tests (reproduit la CI en local) |
 | `make interrogate` | Vérifie la couverture des docstrings |
-| `make pre-commit-update` | Met à jour les hooks pre-commit vers les dernières versions |
-| `make clean` | Supprime les fichiers temporaires (`__pycache__`, `.ipynb_checkpoints`) |
+| `make pre-commit-update` | Met à jour les hooks pre-commit |
+| `make clean` | Supprime les fichiers temporaires |
+
+> **Astuce** : lancer `make ci` avant chaque push permet de s'assurer que la CI passera, sans attendre le retour du pipeline distant.
 
 ---
 

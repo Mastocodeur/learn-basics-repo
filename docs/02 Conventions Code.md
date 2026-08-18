@@ -1,6 +1,6 @@
 # Conventions de code Python
 
-Passons renvue les conventions de code Python. 
+Passons en revue les conventions de code Python. 
 
 Ce guide présente les conventions de nommage, de style et de formatage à respecter dans les projets Python, en s'appuyant sur le standard [PEP 8](https://peps.python.org/pep-0008/).
 
@@ -18,6 +18,10 @@ Les outils [Ruff](https://docs.astral.sh/ruff/) et [pre-commit](https://pre-comm
 - [Commentaires et docstrings](#commentaires-et-docstrings)
 - [Longueur de ligne](#longueur-de-ligne)
 - [Bonnes pratiques générales](#bonnes-pratiques-générales)
+  - [Type hints](#type-hints--annotations-de-type-pep-484)
+  - [Comparaisons](#comparaisons)
+  - [F-strings](#f-strings-pep-498)
+  - [Gestion des chemins](#gestion-des-chemins)
 - [Conventions au-delà de Python](#conventions-au-delà-de-python)
 - [Récapitulatif rapide](#récapitulatif-rapide)
 
@@ -384,20 +388,144 @@ Cette section regroupe plusieurs pratiques idiomatiques de Python qui, sans êtr
 
 Les annotations de type (appelées *type hints* en anglais) permettent d'indiquer le type attendu des arguments et de la valeur de retour d'une fonction. Elles n'ont aucun effet à l'exécution (Python reste un langage dynamique), mais elles améliorent considérablement la lisibilité et permettent aux outils d'analyse statique (comme `mypy` ou `pyright`) de détecter des erreurs avant même d'exécuter le code.
 
-Voici quelques exemples courants :
+#### Types de base
 
 ```python
 def greet(name: str) -> str:
     return f"Bonjour, {name}"
 
-
 def calculate_mean(values: list[float]) -> float:
     return sum(values) / len(values)
 
-
-def find_user(user_id: int) -> dict | None:
-    ...
+def is_valid(age: int) -> bool:
+    return age >= 0
 ```
+
+#### Types optionnels et unions
+
+```python
+# Valeur pouvant être None (deux syntaxes équivalentes)
+def find_user(user_id: int) -> dict | None:   # Python 3.10+
+    ...
+
+from typing import Optional
+def find_user(user_id: int) -> Optional[dict]: # Python < 3.10
+    ...
+
+# Union de types
+def process(value: int | str) -> str:
+    return str(value)
+```
+
+#### Collections
+
+```python
+# Listes, ensembles, tuples
+def tag_items(items: list[str]) -> set[str]: ...
+def get_coordinates() -> tuple[float, float]: ...
+
+# Dictionnaires
+def count_words(text: str) -> dict[str, int]: ...
+
+# Générateurs et itérables
+from collections.abc import Iterator, Iterable, Generator
+
+def read_lines(path: str) -> Iterator[str]: ...
+def process_all(items: Iterable[int]) -> list[int]: ...
+```
+
+#### TypedDict — typer les dictionnaires structurés
+
+Quand un dictionnaire a une structure fixe et connue, `TypedDict` permet de la décrire précisément :
+
+```python
+from typing import TypedDict
+
+class UserRecord(TypedDict):
+    id: int
+    name: str
+    email: str
+    active: bool
+
+def get_user(user_id: int) -> UserRecord:
+    return {"id": user_id, "name": "Alice", "email": "alice@example.com", "active": True}
+```
+
+#### Dataclasses — alternative orientée objet aux TypedDict
+
+Pour des structures de données plus riches, les dataclasses combinent le typage et la commodité :
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class ModelConfig:
+    learning_rate: float = 0.001
+    n_epochs: int = 100
+    batch_size: int = 32
+    features: list[str] = field(default_factory=list)
+
+config = ModelConfig(learning_rate=0.01, features=["age", "salary"])
+print(config.learning_rate)  # 0.01
+```
+
+#### Protocol — typer par comportement (duck typing)
+
+`Protocol` permet de typer par interface plutôt que par héritage — si un objet a les bonnes méthodes, il est compatible :
+
+```python
+from typing import Protocol
+
+class Saveable(Protocol):
+    def save(self, path: str) -> None: ...
+
+def export(obj: Saveable, path: str) -> None:
+    obj.save(path)
+
+# Toute classe avec une méthode save(path) est acceptée,
+# sans avoir à hériter de Saveable
+```
+
+#### Callable — typer les fonctions passées en argument
+
+```python
+from collections.abc import Callable
+
+def apply(func: Callable[[float], float], values: list[float]) -> list[float]:
+    return [func(v) for v in values]
+
+# func doit être une fonction qui prend un float et retourne un float
+apply(lambda x: x ** 2, [1.0, 2.0, 3.0])
+```
+
+#### Vérification statique avec mypy
+
+`mypy` analyse le code sans l'exécuter et signale les incohérences de types :
+
+```bash
+uv add --dev mypy
+
+# Vérifier le projet
+uv run mypy src/
+```
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+
+add(1, "deux")  # mypy signale : Argument 2 to "add" has incompatible type "str"; expected "int"
+```
+
+Configuration dans `pyproject.toml` :
+
+```toml
+[tool.mypy]
+python_version = "3.12"
+strict = false          # true pour activer toutes les vérifications
+ignore_missing_imports = true
+```
+
+> **Conseil** : ne pas chercher à tout typer dès le début. Commencer par les signatures de fonctions publiques — c'est là que le typage apporte le plus de valeur à un coût raisonnable.
 
 ### Comparaisons
 
