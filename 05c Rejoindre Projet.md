@@ -8,6 +8,7 @@
 
 - [Cloner le dépôt](#cloner-le-dépôt)
 - [Créer une branche de travail](#créer-une-branche-de-travail)
+- [Branches d'intégration et de déploiement](#branches-dintégration-et-de-déploiement)
 - [Écrire des messages de commit](#écrire-des-messages-de-commit)
 - [Tags et versions](#tags-et-versions)
 - [Merge Requests](#merge-requests)
@@ -62,6 +63,62 @@ git checkout -b feature/add-data-loader
 ```
 
 Une fois la branche créée, on peut passer à l'installation de l'environnement. Ensuite, la marche à suivre dépend de ce qu'on trouve dans le dépôt. Trois cas de figure se présentent.
+
+
+---
+
+## Branches d'intégration et de déploiement
+
+Les branches listées ci-dessus (`feature/`, `fix/`…) sont des **branches de travail** — elles ont une durée de vie courte et sont créées par les développeurs pour un changement précis. Elles s'intègrent dans une hiérarchie de branches plus stables, dont le rôle est de gérer l'intégration et le déploiement.
+
+### La hiérarchie des branches
+
+```
+feature/ma-fonctionnalite  ──┐
+fix/mon-bug                  ├──► dev ──► main
+refactor/mon-refacto        ──┘
+```
+
+| Branche | Rôle | Qui y touche |
+|---------|------|--------------|
+| `feature/*`, `fix/*`… | Travail en cours — courte durée | Chaque développeur sur sa propre branche |
+| `dev` | Branche d'intégration — reçoit toutes les PR de travail | Personne ne commit directement dessus |
+| `main` | Branche de production — code stable et déployé | Alimentée uniquement depuis `dev` via PR |
+
+**Règle fondamentale :** on ne commit jamais directement sur `dev` ou `main`. Tout passe par une Pull Request (ou Merge Request).
+
+### Le flux de travail complet
+
+1. On crée une branche depuis `dev` : `git checkout -b feature/ma-fonctionnalite`
+2. On travaille, on commit, on push
+3. On ouvre une PR de `feature/ma-fonctionnalite` → `dev`
+4. La PR est relue et mergée dans `dev`
+5. Quand `dev` est stable et validé, une PR est ouverte de `dev` → `main`
+6. Le merge dans `main` déclenche le déploiement en production via le pipeline CI/CD
+
+### Les branches d'infrastructure
+
+Certains projets ajoutent des branches dédiées à l'infrastructure de déploiement. Deux cas courants :
+
+**Branche `aks`** (Azure Kubernetes Service)
+
+Contient les manifests Kubernetes (fichiers YAML) qui décrivent comment déployer l'application sur un cluster AKS (le service Kubernetes managé d'Azure) : Deployment, Service, ConfigMap, Secret, Ingress… Cette branche est lue par le pipeline CI/CD pour savoir comment déployer quand `main` est mis à jour.
+
+**Branche `gke`** (Google Kubernetes Engine)
+
+Même principe, mais pour les clusters Google Cloud. Le contenu est identique dans sa structure (manifests Kubernetes), seules les spécificités liées à Google Cloud diffèrent (annotations, classes de stockage, load balancers GCP…).
+
+> **Note :** certaines équipes font le choix de ne pas avoir de branche `aks` ou `gke` séparée et d'intégrer les fichiers d'infrastructure directement dans `dev` et `main`. C'est un choix valide qui simplifie la gestion des branches, particulièrement adapté aux petites équipes.
+
+### Quand faire quoi
+
+| Situation | Action |
+|-----------|--------|
+| Je commence une nouvelle tâche | `git checkout dev && git pull origin dev` puis `git checkout -b feature/ma-tache` |
+| Ma PR est mergée dans `dev` | Supprimer la branche locale : `git branch -d feature/ma-tache` |
+| Je veux récupérer les dernières modifs de `dev` | `git fetch origin && git rebase origin/dev` |
+| `dev` est validé et prêt pour la prod | Ouvrir une PR `dev` → `main` |
+| Un bug critique est en prod | Créer une `hotfix/` depuis `main`, corriger, PR → `main` puis merger `main` dans `dev` |
 
 ---
 
