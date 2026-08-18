@@ -4,9 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "**.md"
-      - "!README.md"
-      - "!CONTRIBUTING.md"
+      - "docs/**.md"
 
 jobs:
   sync-wiki:
